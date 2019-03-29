@@ -1,0 +1,59 @@
+<% correct_tally = 0%>
+<% question_count = 1%>
+<% @questions.each do |question | 
+if @answers[question_count-1].to_i == question.solution_id.to_i
+  correct_tally += 1
+end
+  question_count += 1
+end %>
+<% score = (correct_tally.to_f / ((question_count.to_f) -1) ) * 100 %>
+<div class="jumbotron">
+<h1>
+  <% if score >= 50 %>
+    Congratulations you passed!
+  <% else%>
+    Sorry you didn't pass this time!  
+  <% end %>
+</h1>
+<p> You scored <%= score.to_i %>% with <%= correct_tally %> out of <%= question_count -1 %> questions correct</p>
+ <%= link_to 'Redo', "/start_test/#{@params['id']}",  class: "btn btn-primary"%>
+ <%= link_to 'Do another test', "/tests",  class: "btn btn-primary"%> 
+</div>
+<% question_count = 1 %>
+<% @questions.each do |question | %>
+  <% if @answers[question_count-1].to_i == question.solution_id.to_i  %>
+    <div class="correct">
+    <% else %>
+      <div class="wrong">
+      <% end %>
+      <div class="card">
+        <div class="card-header">
+        
+          <strong> Q<%= question_count %> : <%= question.description%> </strong>
+          </div>
+          <div class="card-body">
+        Your Answer: <%= Answer.where( "question_id=#{question.id}")[(@answers[0].to_i)-1].content %> ( Answer <%= @answers[question_count-1] %>)
+
+        <br>
+        <% test = Answer.where( "question_id=#{question.id}").order(created_at: :asc) %>
+        Correct Answer:  <%= Answer.where( "question_id=#{question.id}")[(question.solution_id)-1].content %> (Answer <%= question.solution_id %> )
+        <br>
+        </div>
+        <div class="card-footer">
+        <% if @answers[question_count-1].to_i == question.solution_id.to_i  %>
+          <strong> You got this question correct! </strong>
+          <% correct_tally += 1%>
+        <% else  %>
+          <strong> You got this question wrong! </strong>
+        <% end %>
+        </div>
+        
+      </div>
+      <% question_count += 1 %>
+    </div>
+    <br />
+  <% end %>
+  <%
+CompletedTest.create( user_id: current_user.id , score: score, test_id: @test.id )
+%>
+
